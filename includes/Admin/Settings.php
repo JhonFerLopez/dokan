@@ -27,9 +27,11 @@ class Settings {
         add_filter( 'dokan_admin_localize_script', [ $this, 'settings_localize_data' ], 10 );
         add_action( 'wp_ajax_dokan_get_setting_values', [ $this, 'get_settings_value' ], 10 );
         add_action( 'wp_ajax_dokan_save_settings', [ $this, 'save_settings_value' ], 10 );
+        add_action( 'dokan_before_saving_settings', [ $this, 'set_withdraw_limit_value_validation' ], 10, 2 );
         add_filter( 'dokan_admin_localize_script', [ $this, 'add_admin_settings_nonce' ] );
         add_action( 'wp_ajax_dokan_refresh_admin_settings_field_options', [ $this, 'refresh_admin_settings_field_options' ] );
         add_filter( 'dokan_get_settings_values', [ $this, 'format_price_values' ], 12, 2 );
+        add_filter( 'dokan_settings_general_site_options', [ $this, 'add_dokan_data_clear_setting' ], 310 );
     }
 
     /**
@@ -45,9 +47,9 @@ class Settings {
     public function format_price_values( $option_values, $option_name ) {
         if ( 'dokan_selling' === $option_name ) {
             if ( isset( $option_values['commission_type'] ) && 'flat' === $option_values['commission_type'] ) {
-                $option_values['admin_percentage'] = wc_format_localized_price( $option_values['admin_percentage'] );
+                $option_values['admin_percentage'] = isset( $option_values['admin_percentage'] ) ? wc_format_localized_price( $option_values['admin_percentage'] ) : 0;
             } else {
-                $option_values['admin_percentage'] = wc_format_decimal( $option_values['admin_percentage'] );
+                $option_values['admin_percentage'] = isset( $option_values['admin_percentage'] ) ? wc_format_decimal( $option_values['admin_percentage'] ) : 0;
             }
         }
 
@@ -107,12 +109,19 @@ class Settings {
             $option_name  = $_post_data['section'];
             $option_value = $this->sanitize_options( $_post_data['settingsData'], 'edit' );
             $option_value = apply_filters( 'dokan_save_settings_value', $option_value, $option_name );
+            $old_options  = get_option( $option_name, [] );
 
             do_action( 'dokan_before_saving_settings', $option_name, $option_value );
 
             update_option( $option_name, $option_value );
 
             do_action( 'dokan_after_saving_settings', $option_name, $option_value );
+
+            // only flush rewrite rules if store url has been changed
+            if ( 'dokan_general' === $option_name && isset( $old_options['custom_store_url'] ) && $old_options['custom_store_url'] !== $option_value['custom_store_url'] ) {
+                dokan()->rewrite->register_rule();
+                flush_rewrite_rules();
+            }
 
             wp_send_json_success(
                 [
@@ -165,8 +174,6 @@ class Settings {
      * @return mixed string or bool false
      */
     public function get_sanitize_callback( $slug = '', $context = 'read' ) {
-        echo "hola mundo";
-        die();
         if ( empty( $slug ) ) {
             return false;
         }
@@ -305,7 +312,15 @@ class Settings {
     public function get_settings_fields() {
         $pages_array = $this->get_post_type( 'page' );
 
-        $commission_types = dokan_commission_types();
+        $commission_types              = dokan_commission_types();
+        $withdraw_order_status_options = apply_filters(
+            'dokan_settings_withdraw_order_status_options',
+            array(
+                'wc-completed'  => __( 'Completed', 'dokan-lite' ),
+                'wc-processing' => __( 'Processing', 'dokan-lite' ),
+                'wc-on-hold'    => __( 'On-hold', 'dokan-lite' ),
+            )
+        );
 
         $general_site_options = apply_filters(
             'dokan_settings_general_site_options', [
@@ -478,6 +493,16 @@ class Settings {
                     'class'                      => 'wc_input_price',
                     'sanitize_callback'          => 'wc_format_decimal',
                     'response_sanitize_callback' => 'wc_format_localized_price',
+                ],
+                'withdraw_order_status' => [
+                    'name'    => 'withdraw_order_status',
+                    'label'   => __( 'Order Status for Withdraw', 'dokan-lite' ),
+                    'desc'    => __( 'Order status for which vendor can make a withdraw request.', 'dokan-lite' ),
+                    'type'    => 'multicheck',
+                    'default' => array(
+                        'wc-completed'  => 'wc-completed',
+                    ),
+                    'options' => $withdraw_order_status_options,
                 ],
                 'exclude_cod_payment' => [
                     'name'    => 'exclude_cod_payment',
@@ -726,5 +751,63 @@ class Settings {
         } catch ( Exception $e ) {
             $this->send_response_error( $e );
         }
+    }
+
+    /**
+     * Validates admin withdraw limit settings
+     *
+     * @param mixed $option_value
+     * @param mixed $option_name
+     *
+     * @since 3.2.15
+     *
+     * @return void|mixed $option_value
+     */
+    public function set_withdraw_limit_value_validation( $option_name, $option_value ) {
+        if ( 'dokan_withdraw' !== $option_name ) {
+            return;
+        }
+
+        $errors = [];
+
+        if ( ! empty( $option_value['withdraw_limit'] && $option_value['withdraw_limit'] < 0 ) ) {
+            $errors[] = [
+                'name' => 'withdraw_limit',
+                'error' => __( 'Minimum Withdraw Limit can\'t be negative value.', 'dokan-lite' ),
+            ];
+        }
+
+        if ( ! empty( $errors ) ) {
+            wp_send_json_error(
+                [
+                    'settings' => [
+                        'name'  => $option_name,
+                        'value' => $option_value,
+                    ],
+                    'message'  => __( 'Validation error', 'dokan-lite' ),
+                    'errors' => $errors,
+                ],
+                400
+            );
+        }
+    }
+
+    /**
+     * Dokan data clear setting
+     *
+     * @since 3.2.15
+     *
+     * @return array $settings_fields
+     */
+    public function add_dokan_data_clear_setting( $settings_fields ) {
+        $settings_fields['data_clear_on_uninstall'] = [
+            'name'    => 'data_clear_on_uninstall',
+            'label'   => __( 'Data Clear', 'dokan-lite' ),
+            'desc'    => __( 'Delete all data and tables related to Dokan and Dokan Pro plugin while deleting the Dokan plugin.', 'dokan-lite' ),
+            'type'    => 'checkbox',
+            'default' => 'off',
+        ];
+
+        return $settings_fields;
     }
 }

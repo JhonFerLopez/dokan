@@ -4,8 +4,6 @@ $action   = isset( $get_data['action'] ) ? sanitize_key( $get_data['action'] ) :
 
 if ( $action == 'edit' ) {
     do_action( 'dokan_render_product_edit_template', $action );
-} elseif( $action == 'edit-complete' ) {//Ziel
-    do_action( 'dokan_render_product_edit_complete_template', $action );
 } else {
     do_action( 'dokan_render_product_listing_template', $action );
 }

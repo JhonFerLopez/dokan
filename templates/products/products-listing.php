@@ -104,17 +104,20 @@
                                             <th><?php esc_html_e( 'SKU', 'dokan-lite' ); ?></th>
                                             <th><?php esc_html_e( 'Stock', 'dokan-lite' ); ?></th>
                                             <th><?php esc_html_e( 'Price', 'dokan-lite' ); ?></th>
-                                            <th><?php esc_html_e( 'Earning', 'dokan-lite' ); ?></th>
+                                            <th><?php esc_html_e( 'Earning', 'dokan-lite' ); ?><?php echo '<span class="tips earning-info" title="' . esc_html__( 'Earning could be greater than or less than the calculated value based on different criteria like tax and shipping fee receiver', 'dokan-lite' ) . '"></span>';?></th>
                                             <th><?php esc_html_e( 'Type', 'dokan-lite' ); ?></th>
                                             <th><?php esc_html_e( 'Views', 'dokan-lite' ); ?></th>
                                             <th><?php esc_html_e( 'Date', 'dokan-lite' ); ?></th>
                                         </tr>
                                     </thead>
                                     <tbody>
+                                    <?php do_action( 'dokan_product_list_before_table_body_start' ); ?>
                                         <?php
-                                        $pagenum       = isset( $_GET['pagenum'] ) ? absint( $_GET['pagenum'] ) : 1;
-                                        $post_statuses = apply_filters( 'dokan_product_listing_post_statuses', [ 'publish', 'draft', 'pending', 'future' ] );
-                                        $get_data      = wp_unslash( $_GET );
+                                        $pagenum        = isset( $_GET['pagenum'] ) ? absint( $_GET['pagenum'] ) : 1;
+                                        $post_statuses  = apply_filters( 'dokan_product_listing_post_statuses', [ 'publish', 'draft', 'pending', 'future' ] );
+                                        $stock_statuses = apply_filters( 'dokan_product_stock_statuses', [ 'instock', 'outofstock' ] );
+                                        $product_types  = apply_filters( 'dokan_product_types', [ 'simple' => __( 'Simple', 'dokan-lite' ) ] );
+                                        $get_data       = wp_unslash( $_GET );
 
                                         $args = array(
                                             'posts_per_page' => 15,
@@ -131,7 +134,7 @@
                                             ),
                                         );
 
-                                        if ( isset( $get_data['post_status']) && in_array( $get_data['post_status'], $post_statuses ) ) {
+                                        if ( isset( $get_data['post_status']) && in_array( $get_data['post_status'], $post_statuses, true ) ) {
                                             $args['post_status'] = $get_data['post_status'];
                                         }
 
@@ -148,8 +151,24 @@
                                             );
                                         }
 
+                                        if ( isset( $get_data['product_type']) && array_key_exists( $get_data['product_type'], $product_types ) ) {
+                                            $args['tax_query'][] = array(
+                                                'taxonomy' => 'product_type',
+                                                'field'    => 'slug',
+                                                'terms'    => $get_data['product_type'],
+                                            );
+                                        }
+
                                         if ( isset( $get_data['product_search_name']) && !empty( $get_data['product_search_name'] ) ) {
                                             $args['s'] = $get_data['product_search_name'];
+                                        }
+
+                                        if ( isset( $get_data['post_status']) && in_array( $get_data['post_status'], $stock_statuses, true ) ) {
+                                            $args['meta_query'][] = array(
+                                                'key'     => '_stock_status',
+                                                'value'   => $get_data['post_status'],
+                                                'compare' => '='
+                                            );
                                         }
 
                                         $original_post = $post;

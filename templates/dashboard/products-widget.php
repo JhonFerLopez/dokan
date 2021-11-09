@@ -9,7 +9,6 @@
  *
  * @package dokan
  */
- 
 ?>
 
 <div class="dashboard-widget products">

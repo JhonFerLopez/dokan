@@ -30,8 +30,6 @@ class Products {
         add_action( 'template_redirect', array( $this, 'handle_delete_product' ) );
         add_action( 'dokan_render_new_product_template', array( $this, 'render_new_product_template' ), 10 );
         add_action( 'dokan_render_product_edit_template', array( $this, 'load_product_edit_template' ), 11 );
-        //Ziel
-        add_action( 'dokan_render_product_edit_complete_template', array( $this, 'load_product_edit_complete_template' ), 11 );
         add_action( 'dokan_after_listing_product', array( $this, 'load_add_new_product_popup' ), 10 );
         add_action( 'dokan_product_edit_after_title', array( __CLASS__, 'load_download_virtual_template' ), 10, 2 );
         add_action( 'dokan_product_edit_after_main', array( __CLASS__, 'load_inventory_template' ), 5, 2 );
@@ -86,12 +84,18 @@ class Products {
         $_virtual        = get_post_meta( $post_id, '_virtual', true );
         $is_downloadable = ( 'yes' == $_downloadable ) ? true : false;
         $is_virtual      = ( 'yes' == $_virtual ) ? true : false;
+        $digital_mode    = dokan_get_option( 'global_digital_mode', 'dokan_general', 'sell_both' );
+
+        if ( 'sell_physical' === $digital_mode ) {
+            return;
+        }
 
         dokan_get_template_part( 'products/download-virtual', '', array(
             'post_id'         => $post_id,
             'post'            => $post,
             'is_downloadable' => $is_downloadable,
             'is_virtual'      => $is_virtual,
+            'digital_mode'    => $digital_mode,
             'class'           => 'show_if_subscription show_if_variable-subscription show_if_simple',
         ) );
     }
@@ -126,6 +130,12 @@ class Products {
      * @return void
      */
     public static function load_downloadable_template( $post, $post_id ) {
+        $digital_mode = dokan_get_option( 'global_digital_mode', 'dokan_general', 'sell_both' );
+
+        if ( 'sell_physical' === $digital_mode ) {
+            return;
+        }
+
         dokan_get_template_part( 'products/downloadable', '', array(
             'post_id' => $post_id,
             'post'    => $post,
@@ -180,21 +190,6 @@ class Products {
     public function load_product_edit_template() {
         if ( current_user_can( 'dokan_edit_product' ) ) {
             dokan_get_template_part( 'products/new-product-single' );
-        } else {
-            dokan_get_template_part('global/dokan-error', '', array(
-                'deleted' => false,
-                'message' => __( 'You have no permission to view this page', 'dokan-lite' ),
-            ) );
-            return;
-        }
-    }
-    
-    /**
-     * Ziel
-     */
-    public function load_product_edit_complete_template() {
-        if ( current_user_can( 'dokan_edit_product' ) ) {
-            dokan_get_template_part( 'products/new-product-single-complete' );
         } else {
             dokan_get_template_part('global/dokan-error', '', array(
                 'deleted' => false,
@@ -353,6 +348,7 @@ class Products {
                     }
 
                     update_post_meta( $product_id, '_visibility', 'visible' );
+                    update_post_meta( $product_id, '_stock_status', 'instock' );
 
                     do_action( 'dokan_new_product_added', $product_id, $postdata );
 
@@ -430,6 +426,22 @@ class Products {
             $errors[] = __( 'I swear this is not your product!', 'dokan-lite' );
         }
 
+        if ( isset( $postdata['product_tag'] ) ) {
+            /**
+             * Filter of maximun a vendor can add tags.
+             *
+             * @since 3.3.7
+             *
+             * @param integer default -1
+             */
+            $maximum_tags_select_length = apply_filters( 'dokan_product_tags_select_max_length', -1 );
+
+            // Setting limitation for how many product tags that vendor can input.
+            if ( $maximum_tags_select_length !== -1 && count( $postdata['product_tag'] ) !== 0 && count( $postdata['product_tag'] ) > $maximum_tags_select_length ) {
+                $errors[] = sprintf( __( 'You can only select %s tags', 'dokan-lite' ), number_format_i18n( $maximum_tags_select_length ) );
+            }
+        }
+
         self::$errors = apply_filters( 'dokan_can_edit_product', $errors );
 
         if ( ! self::$errors ) {
@@ -441,7 +453,7 @@ class Products {
                 'post_status'    => $post_status,
                 'comment_status' => isset( $postdata['_enable_reviews'] ) ? 'open' : 'closed',
             ) );
-            
+
             if ( $post_slug ) {
                 $product_info['post_name'] = wp_unique_post_slug( $post_slug, $post_id, $post_status, 'product', 0 );
             }

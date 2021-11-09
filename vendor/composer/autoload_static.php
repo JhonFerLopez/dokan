@@ -4,8 +4,12 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInit4d61ec1b003f7b094a4ea9632ad3810a
+class ComposerStaticInit11011a74fd6e9438d7fd882addcf9aad
 {
+    public static $files = array (
+        'b45b351e6b6f7487d819961fef2fda77' => __DIR__ . '/..' . '/jakeasmith/http_build_url/src/http_build_url.php',
+    );
+
     public static $prefixLengthsPsr4 = array (
         'W' => 
         array (
@@ -33,6 +37,7 @@ class ComposerStaticInit4d61ec1b003f7b094a4ea9632ad3810a
         'Appsero\\Insights' => __DIR__ . '/..' . '/appsero/client/src/Insights.php',
         'Appsero\\License' => __DIR__ . '/..' . '/appsero/client/src/License.php',
         'Appsero\\Updater' => __DIR__ . '/..' . '/appsero/client/src/Updater.php',
+        'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
         'WeDevs\\Dokan\\Abstracts\\DokanBackgroundProcesses' => __DIR__ . '/../..' . '/includes/Abstracts/DokanBackgroundProcesses.php',
         'WeDevs\\Dokan\\Abstracts\\DokanModel' => __DIR__ . '/../..' . '/includes/Abstracts/DokanModel.php',
         'WeDevs\\Dokan\\Abstracts\\DokanPromotion' => __DIR__ . '/../..' . '/includes/Abstracts/DokanPromotion.php',
@@ -150,6 +155,7 @@ class ComposerStaticInit4d61ec1b003f7b094a4ea9632ad3810a
         'WeDevs\\Dokan\\Upgrade\\Upgrades\\V_3_0_4' => __DIR__ . '/../..' . '/includes/Upgrade/Upgrades/V_3_0_4.php',
         'WeDevs\\Dokan\\Upgrade\\Upgrades\\V_3_1_0' => __DIR__ . '/../..' . '/includes/Upgrade/Upgrades/V_3_1_0.php',
         'WeDevs\\Dokan\\Upgrade\\Upgrades\\V_3_1_1' => __DIR__ . '/../..' . '/includes/Upgrade/Upgrades/V_3_1_1.php',
+        'WeDevs\\Dokan\\Upgrade\\Upgrades\\V_3_2_12' => __DIR__ . '/../..' . '/includes/Upgrade/Upgrades/V_3_2_12.php',
         'WeDevs\\Dokan\\Vendor\\Manager' => __DIR__ . '/../..' . '/includes/Vendor/Manager.php',
         'WeDevs\\Dokan\\Vendor\\SetupWizard' => __DIR__ . '/../..' . '/includes/Vendor/SetupWizard.php',
         'WeDevs\\Dokan\\Vendor\\StoreListsFilter' => __DIR__ . '/../..' . '/includes/Vendor/StoreListsFilter.php',
@@ -178,9 +184,9 @@ class ComposerStaticInit4d61ec1b003f7b094a4ea9632ad3810a
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->prefixLengthsPsr4 = ComposerStaticInit4d61ec1b003f7b094a4ea9632ad3810a::$prefixLengthsPsr4;
-            $loader->prefixDirsPsr4 = ComposerStaticInit4d61ec1b003f7b094a4ea9632ad3810a::$prefixDirsPsr4;
-            $loader->classMap = ComposerStaticInit4d61ec1b003f7b094a4ea9632ad3810a::$classMap;
+            $loader->prefixLengthsPsr4 = ComposerStaticInit11011a74fd6e9438d7fd882addcf9aad::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticInit11011a74fd6e9438d7fd882addcf9aad::$prefixDirsPsr4;
+            $loader->classMap = ComposerStaticInit11011a74fd6e9438d7fd882addcf9aad::$classMap;
 
         }, null, ClassLoader::class);
     }

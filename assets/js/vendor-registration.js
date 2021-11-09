@@ -8,11 +8,11 @@ var Dokan_Vendor_Registration = {
         // bind events
         $( '.user-role input[type=radio]', form ).on( 'change', this.showSellerForm );
         $( '.tc_check_box', form ).on( 'click', this.onTOC );
-        $( '#shop-phone', form ).keydown( this.ensurePhoneNumber );
+        $( '#shop-phone', form ).on( 'keydown', this.ensurePhoneNumber );
         $( '#company-name', form ).on( 'focusout', this.generateSlugFromCompany );
 
-        $( '#seller-url', form ).keydown( this.constrainSlug );
-        $( '#seller-url', form ).keyup( this.renderUrl );
+        $( '#seller-url', form ).on( 'keydown', this.constrainSlug );
+        $( '#seller-url', form ).on( 'keyup', this.renderUrl );
         $( '#seller-url', form ).on( 'focusout', this.checkSlugAvailability );
 
         this.validationLocalized();
@@ -83,9 +83,17 @@ var Dokan_Vendor_Registration = {
                 return;
         }
 
+        if ( e.shiftKey && e.key === '.' ) {
+            return;
+        }
+
         // Ensure that it is a number and stop the keypress
-        if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
-            e.preventDefault();
+        if ( ( e.shiftKey && ! isNaN( Number(e.key) ) ) ) {
+            return;
+        }
+
+        if ( isNaN( Number(e.key) ) ) {
+           e.preventDefault();
         }
     },
 

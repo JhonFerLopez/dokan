@@ -49,7 +49,7 @@ class Registration {
             }
         }
 
-        $allowed_roles = apply_filters( 'dokan_register_user_role', array( 'customer', 'seller','di' ) );
+        $allowed_roles = apply_filters( 'dokan_register_user_role', array( 'customer', 'seller' ) );
 
         // is the role name allowed or user is trying to manipulate?
         if ( isset( $post_data['role'] ) && ! in_array( $post_data['role'], $allowed_roles, true ) ) {
@@ -87,7 +87,7 @@ class Registration {
     public function set_new_vendor_names( $data ) {
         $post_data = wp_unslash( $_POST ); // phpcs:ignore WordPress.Security.NonceVerification
 
-        $allowed_roles = apply_filters( 'dokan_register_user_role', array( 'customer', 'seller','di') );
+        $allowed_roles = apply_filters( 'dokan_register_user_role', array( 'customer', 'seller' ) );
         $role          = ( isset( $post_data['role'] ) && in_array( $post_data['role'], $allowed_roles, true ) ) ? $post_data['role'] : 'customer';
 
         $data['role'] = $role;

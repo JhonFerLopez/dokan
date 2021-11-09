@@ -17,7 +17,7 @@ class Core {
      * @since 3.0.0
      */
     public function __construct() {
-        //add_action( 'admin_init', array( $this, 'block_admin_access' ) );
+        add_action( 'admin_init', array( $this, 'block_admin_access' ) );
         add_filter( 'posts_where', array( $this, 'hide_others_uploads' ) );
         add_filter( 'body_class', array( $this, 'add_dashboard_template_class' ), 99 );
         add_filter( 'wp_title', array( $this, 'wp_title' ), 20, 2 );
@@ -32,7 +32,6 @@ class Core {
      *
      * @global string $pagenow
      */
-    /*
     function block_admin_access() {
         global $pagenow, $current_user;
 
@@ -50,7 +49,7 @@ class Core {
             exit;
         }
     }
-    */
+
     /**
      * Hide other users uploads for `seller` users
      *

@@ -31,7 +31,7 @@
 <tr class="<?php echo esc_attr( $tr_class ); ?>">
     <th class="dokan-product-select check-column">
         <label for="cb-select-<?php echo esc_attr( $post->ID ); ?>"></label>
-        <input class="cb-select-items dokan-checkbox" type="checkbox" name="bulk_products[]" value="<?php echo esc_attr( $post->ID ); ?>">
+        <input class="cb-select-items dokan-checkbox" type="checkbox" data-product-name="<?php echo esc_attr( $product->get_title() ); ?>" name="bulk_products[]" value="<?php echo esc_attr( $post->ID ); ?>">
     </th>
     <td data-title="<?php esc_attr_e( 'Image', 'dokan-lite' ); ?>" class="column-thumb">
         <?php if ( current_user_can( 'dokan_edit_product' ) ) { ?>
@@ -49,11 +49,7 @@
 
         <?php if ( !empty( $row_actions ) ) { ?>
             <div class="row-actions">
-                <?php 
-                //echo $product->ID." - ". $post->ID."  "; Ziel
-                echo '<span class="edit"><a href="https://tura.store/dashboard/products/?product_id='.$post->ID.'&action=edit-complete">Edici&oacute;n Completa</a> | </span>';
-                $row_actions = str_replace("Editar", "Edici&oacute;n r&aacute;pida", $row_actions); 
-                echo wp_kses( $row_actions, $row_actions_kses ); ?>
+                <?php echo wp_kses( $row_actions, $row_actions_kses ); ?>
             </div>
         <?php } ?>
 
@@ -130,26 +126,35 @@
     </td>
     <td class="post-date" data-title="<?php esc_attr_e( 'Date', 'dokan-lite' ); ?>">
         <?php
+
+
+
         if ( '0000-00-00 00:00:00' == $post->post_date ) {
-            $t_time    = $h_time    = __( 'Unpublished', 'dokan-lite' );
+            $post_published_date = $human_readable_time = __( 'Unpublished', 'dokan-lite' );
             $time_diff = 0;
         } else {
-            $t_time = get_the_time( __( 'Y/m/d g:i:s A', 'dokan-lite' ) );
-            $m_time = $post->post_date;
-            $time   = get_post_time( 'G', true, $post );
+            // get current time
+            $current_time = dokan_current_datetime();
+            // set timezone to gmt
+            $gmt_time = $current_time->setTimezone( new DateTimeZone( 'UTC' ) );
+            // read post gmt time
+            $post_time_gmt = $gmt_time->modify( $post->post_date_gmt );
 
-            $time_diff = time() - $time;
+            $format = apply_filters( 'dokan_date_time_format', wc_date_format() . ' ' . wc_time_format() );
+            // currently dokan_format_date doesn't support time format, will update this soon,
+            // right now we need to send $format from our end.
+            // if you need date only remove $format from dokan_format_date function parameter
+            $human_readable_time = dokan_format_date( $post_time_gmt->getTimestamp(), $format );
+            $post_published_date = apply_filters( 'post_date_column_time', dokan_format_date( $post_time_gmt->getTimestamp() ), $post, 'date', 'all' );
 
+            // get human readable time
+            $time_diff = $current_time->getTimestamp() - $post_time_gmt->getTimestamp();
             if ( $time_diff > 0 && $time_diff < 24 * 60 * 60 ) {
-                $h_time = sprintf( __( '%s ago', 'dokan-lite' ), human_time_diff( $time ) );
-            } else {
-                $h_time = mysql2date( __( 'Y/m/d', 'dokan-lite' ), $m_time );
+                $human_readable_time = sprintf( __( '%s ago', 'dokan-lite' ), human_time_diff( $post_time_gmt->getTimestamp() ) );
             }
         }
 
-        $post_date_column_time = apply_filters( 'post_date_column_time', dokan_date_time_format( $h_time, true ), $post, 'date', 'all' );
-
-        echo '<abbr title="' . esc_attr( dokan_date_time_format( $t_time ) ) . '">' . esc_html( $post_date_column_time ) . '</abbr>';
+        echo '<abbr title="' . esc_attr( $human_readable_time ) . '">' . esc_html( $post_published_date ) . '</abbr>';
         echo '<div class="status">';
 
         if ( 'publish' == $post->post_status ) {

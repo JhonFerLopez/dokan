@@ -32,6 +32,13 @@
         <small><?php echo esc_url( home_url() . '/' . dokan_get_option( 'custom_store_url', 'dokan_general', 'store' ) ); ?>/<strong id="url-alart"></strong></small>
     </p>
 
+    <?php
+    /**
+     * @since 3.2.8
+     */
+    do_action( 'dokan_seller_registration_after_shopurl_field', ! empty( $postdata ) ? $postdata : [] );
+    ?>
+
     <p class="form-row form-group form-row-wide">
         <label for="shop-phone"><?php esc_html_e( 'Phone Number', 'dokan-lite' ); ?><span class="required">*</span></label>
         <input type="text" class="input-text form-control" name="phone" id="shop-phone" value="<?php if ( ! empty( $postdata['phone'] ) ) { echo esc_attr( $postdata['phone'] ); } ?>" required="required" />
@@ -55,26 +62,16 @@
 <?php do_action( 'dokan_reg_form_field' ); ?>
 
 <p class="form-row form-group user-role vendor-customer-registration">
-    
+
     <label class="radio">
         <input type="radio" name="role" value="customer"<?php checked( $role, 'customer' ); ?>>
-        <?php esc_html_e( 'Soy Cliente', 'dokan-lite' ); ?>
-    </label>
-    <br/>
-    <label class="radio">
-        <input type="radio" name="role" value="di"<?php checked( $role, 'di' ); ?>>
-        <?php esc_html_e( 'Soy Dise&ntilde;ador', 'dokan-lite' ); ?>
+        <?php esc_html_e( 'I am a customer', 'dokan-lite' ); ?>
     </label>
     <br/>
     <label class="radio">
         <input type="radio" name="role" value="seller"<?php checked( $role, 'seller' ); ?>>
-        <?php esc_html_e( 'Soy Proveedor', 'dokan-lite' ); ?>
+        <?php esc_html_e( 'I am a vendor', 'dokan-lite' ); ?>
     </label>
-    <br>
     <?php do_action( 'dokan_registration_form_role', $role ); ?>
-    <div class="woocommerce-privacy-policy-text">
-    	<p>
-    	    <a href="https://tura.store/politica-privacidad/" class="woocommerce-privacy-policy-link" target="_blank">Aplica t&eacute;rminos y condiciones</a>.
-    	</p>
-    </div>
+
 </p>

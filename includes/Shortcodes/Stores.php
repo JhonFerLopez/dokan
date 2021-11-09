@@ -19,10 +19,15 @@ class Stores extends DokanShortcode {
      */
     public function render_shortcode( $atts ) {
         $defaults = array(
-            'per_page' => 10,
-            'search'   => 'yes',
-            'per_row'  => 3,
-            'featured' => 'no',
+            'per_page'           => 10,
+            'search'             => 'yes',
+            'per_row'            => 3,
+            'featured'           => 'no',
+            'category'           => '',
+            'order'              => '',
+            'orderby'            => '',
+            'store_id'           => '',
+            'with_products_only' => '',
         );
 
         /**
@@ -60,6 +65,30 @@ class Stores extends DokanShortcode {
 
         if ( 'yes' === $attr['featured'] ) {
             $seller_args['featured'] = 'yes';
+        }
+
+        if ( ! empty( $attr['category'] ) ) {
+            $seller_args['store_category_query'][] = array(
+                'taxonomy' => 'store_category',
+                'field'    => 'slug',
+                'terms'    => explode( ',', $attr['category'] ),
+            );
+        }
+
+        if ( ! empty( $attr['order'] ) ) {
+            $seller_args['order'] = $attr['order'];
+        }
+
+        if ( ! empty( $attr['orderby'] ) ) {
+            $seller_args['orderby'] = $attr['orderby'];
+        }
+
+        if ( ! empty( $attr['with_products_only'] ) && 'yes' === $attr['with_products_only'] ) {
+            $seller_args['has_published_posts'] = [ 'product' ];
+        }
+
+        if ( ! empty( $attr['store_id'] ) ) {
+            $seller_args['include'] = explode( ',', $attr['store_id'] );
         }
 
         $sellers = dokan_get_sellers( apply_filters( 'dokan_seller_listing_args', $seller_args, $_GET ) );

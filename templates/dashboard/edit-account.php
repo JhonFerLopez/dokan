@@ -42,8 +42,7 @@ $user = get_user_by( 'id', get_current_user_id() );
 
                 <article class="dashboard-content-area woocommerce edit-account-wrap">
 
-                    <?php wc_print_notices(); 
-                    /*?>
+                    <?php wc_print_notices();?>
 
                     <h1 class="entry-title"><?php esc_html_e( 'Edit Account Details', 'dokan-lite' ); ?></h1>
 
@@ -99,13 +98,7 @@ $user = get_user_by( 'id', get_current_user_id() );
                         <?php do_action( 'woocommerce_edit_account_form_end' ); ?>
 
                     </form>
-                    <?php */  ?>
-                    
-                    <iframe src="https://tura.store/wp-admin/user-edit.php?user_id=<?php echo get_current_user_id(); ?>" 
-                            marginwidth="0" marginheight="0" name="ventana_iframe" scrolling="si" 
-                            border="0" 
-                            frameborder="0" style="width: 100%;height: 600px;">
-                    </iframe>
+
                 </article><!-- .dashboard-content-area -->
 
              <?php
